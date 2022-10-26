@@ -1,0 +1,214 @@
+<html>
+  <script src="main.js"></script>
+<body>
+  <div style="width: 800px; height: 600px; background-color: Black;">
+    <div id="starBackground" style="width: 100%; height: 100%; background-image: url('tsugakuro.jpg');">
+        <img id="starShip" src="umekotsuda.png" width="200px" style="position: absolute; top: 8px; left: 100px;"/>
+
+      
+    </div>   
+  </div>
+</body>
+<script>
+
+const starShip = document.getElementById('starShip')
+const bulletList = []
+const monsterList = []
+
+// 要素の大きさ
+const monsterWidth = 50
+const monsterHeight = 50
+
+let positionY = 0
+let shipCoordinate = { x: 100, y: 450 }
+
+
+
+function renderShip() {
+  starShip.style.left = shipCoordinate.x
+  starShip.style.top = shipCoordinate.y
+}
+
+renderShip()
+
+// 当たり判定
+function kill(monster, monsterCoordinate) {
+  for (var i = 0; i < bulletList.length; i++) {
+    const bulletX = bulletList[i].x
+    const bulletY = bulletList[i].y
+ 
+    // 敵の当たり範囲を作る
+    const monsterLeft = monsterCoordinate.x
+    const monsterRight = monsterCoordinate.x + monsterWidth
+    const monsterTop = monsterCoordinate.y
+    const monsterBottom = monsterCoordinate.y + monsterHeight
+
+    if (bulletX >= monsterLeft && bulletX <= monsterRight 
+    && bulletY >= monsterTop && bulletY <= monsterBottom) {
+      console.log('kill')
+      monster.remove()
+    }
+
+
+  }
+}
+
+ 
+  
+
+function renderEnemy() {
+  // 要素の追加
+  const monster = document.createElement("img")
+  monster.src = "ka1.png"
+  monster.style.position = 'absolute'
+  monster.width = "50"
+  starBackground.appendChild(monster)
+
+
+  // 初期座標
+  const monsterCoordinate = { x: 400, y: 8 } 
+  // developer console で確認するとわかりますが、<body> には実は 8px のマージンがあります
+  monster.style.left = monsterCoordinate.x
+  monster.style.top = monsterCoordinate.y
+
+  //座標の変化
+  setInterval(()=>
+  {
+    // 横に動かす値をランダムで決める
+    // Math.random は 0 <= x < 1 の間の数字を返す
+    var shiftX = Math.floor(Math.random() * 20) + 1 // 1 から 5の間の整数を返す
+    shiftX *= Math.round(Math.random()) ? 1 : -1 // ランダムで + か - か決める 
+
+    monsterCoordinate.x += shiftX
+    monsterCoordinate.y += 3 // 敵を徐々に下に動かす
+    monster.style.left = monsterCoordinate.x
+    monster.style.top = monsterCoordinate.y
+    
+    // 配列に追加
+    monsterList.push(monsterCoordinate)
+    //画面外に出た要素を消す
+    if (monsterCoordinate.y > 600 || monsterCoordinate.x > 800) //画面外か判定(数字同士を比較）
+    { 
+            monster.remove()
+    }
+  } , 100)       
+  
+  // kill 判定
+  setInterval(() => {
+    kill(monster, monsterCoordinate)
+  }, 10)
+}
+
+// 敵を出し続ける
+renderEnemy() // 最初の1回
+setInterval(() => {
+  renderEnemy()
+}, 1000)
+
+
+const game={}
+
+function shoot()
+{
+  //弾の要素を作成
+  const bullet = document.createElement("img")
+  bullet.src = "umenohana.png"
+  bullet.style.position = 'absolute'
+  bullet.width = "50"
+  
+  //背景の子要素
+  starBackground.appendChild(bullet) 
+ 
+  //数字を別に管理
+  const bulletCoord 
+  = { x: shipCoordinate.x  +97,
+      y: shipCoordinate.y +20 }
+  
+   //初期の座標を設定
+  bullet.style.left = bulletCoord.x  //X座標の開始点
+  bullet.style.top =  bulletCoord.y //Y座標の開始点    
+
+  //座標の変化
+  setInterval(()=>
+  {
+    game.fps = 30
+    const shotSpeed = 15 //弾の速さ(1フレームに5px)
+    bulletCoord.y -= 15 //真上に向けて移動(1フレームに5px)
+    bullet.style.top = bulletCoord.y
+
+    //画面外に出た要素を消す
+    if (bulletCoord.y < 0)//画面外か判定(数字同士を比較）
+    { 
+      bullet.remove()
+    } 
+
+
+    // 座標を配列に追加
+    bulletList.push(bulletCoord)
+  } , 50)        
+}
+
+const shipControl = {
+  vector: { x: 0, y: 0 }, // x軸にもy軸にも動きが無い初期状態
+  shooting: false, // 玉を打っていない状態
+}
+
+
+document.addEventListener('keydown', (e) => {
+  switch(e.keyCode) {
+    case 38: //up
+      shipControl.vector.y = -9 // 上が押されたらy軸に動くように設定
+      break
+    case 40: // 'down'
+      shipControl.vector.y = 9
+      break
+    case 37: // left
+      shipControl.vector.x = -9
+      break
+    case 39: // right
+      shipControl.vector.x = 9
+      break  
+    case 32: //space
+      shoot()
+      break  //ここが微妙
+    
+  }
+  // renderShip() // ここで renderShipは呼ばないのでコメントアウト
+})
+
+document.addEventListener('keyup', (e) => {
+  switch(e.keyCode) {
+    case 38:
+      shipControl.vector.y = 0 // 上ボタンが離されたらy方向に動かないように0を設定
+      break
+    case 40: // 'down'
+      shipControl.vector.y = 0
+      break
+    case 37: // left
+      shipControl.vector.x = 0
+      break
+    case 39: // right
+      shipControl.vector.x = 0
+      break  
+    case 32: //space
+      break
+  
+  }
+})
+
+// 都度ループして、状態変化がある場合はそれに必要な処理を行う
+setInterval(() => {
+  if (shipControl.vector.x != 0 || shipControl.vector.y != 0) {
+    shipCoordinate.x += shipControl.vector.x
+    shipCoordinate.y += shipControl.vector.y
+    renderShip()
+  }
+  if (shipControl.shooting) {
+    shoot()
+  }
+}, 50)
+
+
+
+</script>
+</html>
